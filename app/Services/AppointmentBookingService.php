@@ -5,6 +5,9 @@ namespace App\Services;
 use App\Enums\AppointmentStatus;
 use App\Enums\UserRole;
 use App\Enums\WeekDay;
+use App\Events\AppointmentBooked;
+use App\Events\AppointmentCancelled;
+use App\Events\AppointmentMarkedAbsent;
 use App\Exceptions\BookingException;
 use App\Models\Appointment;
 use App\Models\Doctor;
@@ -35,7 +38,7 @@ class AppointmentBookingService
             throw new BookingException('لا يمكن حجز موعد في وقت مضى.');
         }
 
-        return DB::transaction(function () use ($doctor, $patient, $startAt, $branchId, $bookedBy) {
+        $appointment = DB::transaction(function () use ($doctor, $patient, $startAt, $branchId, $bookedBy) {
             $dayName  = strtolower($startAt->format('l'));
             $weekDay  = WeekDay::from($dayName);
 
@@ -93,6 +96,10 @@ class AppointmentBookingService
                 'created_by' => $bookedBy->id,
             ]);
         });
+
+        AppointmentBooked::dispatch($appointment);
+
+        return $appointment;
     }
 
     public function cancel(Appointment $appointment, User $cancelledBy): Appointment
@@ -109,7 +116,26 @@ class AppointmentBookingService
 
         $appointment->update(['status' => AppointmentStatus::Cancelled]);
 
-        return $appointment->fresh();
+        $appointment = $appointment->fresh();
+
+        AppointmentCancelled::dispatch($appointment);
+
+        return $appointment;
+    }
+
+    public function markNoShow(Appointment $appointment): Appointment
+    {
+        if ($appointment->status !== AppointmentStatus::Booked) {
+            throw new BookingException('لا يمكن تعيين هذا الموعد كغائب.', 422);
+        }
+
+        $appointment->update(['status' => AppointmentStatus::NoShow]);
+
+        $appointment = $appointment->fresh();
+
+        AppointmentMarkedAbsent::dispatch($appointment);
+
+        return $appointment;
     }
 
     private function authorizeBooker(User $user, int $branchId, Patient $patient): void
