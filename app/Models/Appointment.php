@@ -17,15 +17,17 @@ class Appointment extends Model
         'start_at',
         'end_at',
         'status',
+        'reminder_sent_at',
         'created_by',
     ];
 
     protected function casts(): array
     {
         return [
-            'status' => AppointmentStatus::class,
-            'start_at' => 'datetime',
-            'end_at' => 'datetime',
+            'status'           => AppointmentStatus::class,
+            'start_at'         => 'datetime',
+            'end_at'           => 'datetime',
+            'reminder_sent_at' => 'datetime',
         ];
     }
 
