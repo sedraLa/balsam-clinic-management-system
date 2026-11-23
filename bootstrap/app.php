@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\BookingException;
 use App\Http\Middleware\CheckRole;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -23,6 +24,13 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+
+        $exceptions->render(function (BookingException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                $status = $e->getCode() >= 400 ? $e->getCode() : 422;
+                return response()->json(['message' => $e->getMessage()], $status);
+            }
+        });
 
         $exceptions->render(function (AuthenticationException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
