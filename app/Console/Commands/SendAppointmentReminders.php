@@ -18,6 +18,10 @@ class SendAppointmentReminders extends Command
 
     public function handle(): int
     {
+        if (env('SCHEDULE_FAIL_SIMULATION', false)) {
+            throw new \RuntimeException('Simulated failure in appointments:send-reminders.');
+        }
+
         $date = $this->option('date')
             ? Carbon::parse($this->option('date'))->startOfDay()
             : now()->addDay()->startOfDay();
