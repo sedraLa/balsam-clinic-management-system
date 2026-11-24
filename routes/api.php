@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AvailableSlotsController;
+use App\Http\Controllers\DoctorController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -12,6 +13,7 @@ Route::middleware('auth:sanctum')->group(function () {
         return new UserResource($request->user()->load('branch'));
     });
 
+    Route::get('/doctors', [DoctorController::class, 'index']);
     Route::get('/doctors/{doctor}/available-slots', AvailableSlotsController::class);
 
     Route::post('/appointments', [AppointmentController::class, 'store']);

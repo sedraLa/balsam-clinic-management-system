@@ -3,8 +3,12 @@
 namespace App\Providers;
 
 use App\Models\Appointment;
+use App\Models\Doctor;
+use App\Models\DoctorSchedule;
 use App\Models\MedicalRecord;
 use App\Observers\AppointmentObserver;
+use App\Observers\DoctorObserver;
+use App\Observers\DoctorScheduleObserver;
 use App\Observers\MedicalRecordObserver;
 use App\Policies\AppointmentPolicy;
 use App\Sms\LogSmsProvider;
@@ -23,6 +27,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Appointment::observe(AppointmentObserver::class);
         MedicalRecord::observe(MedicalRecordObserver::class);
+        Doctor::observe(DoctorObserver::class);
+        DoctorSchedule::observe(DoctorScheduleObserver::class);
 
         Gate::policy(Appointment::class, AppointmentPolicy::class);
     }
