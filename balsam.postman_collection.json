@@ -1,0 +1,235 @@
+{
+  "info": {
+    "name": "Balsam Clinic API",
+    "description": "Multi-branch clinic management system API. All routes require a Sanctum Bearer token. Set the `base_url` and `token` collection variables before running requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000/api", "type": "string" },
+    { "key": "token",    "value": "", "type": "string",
+      "description": "Paste a token from storage/demo-tokens.txt after running migrate --seed" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth — Current User",
+      "item": [
+        {
+          "name": "GET /user",
+          "description": "Returns the authenticated user's profile including branch. Roles: all.",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/user", "host": ["{{base_url}}"], "path": ["user"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doctors",
+      "item": [
+        {
+          "name": "GET /doctors",
+          "description": "List doctors. Optional filters: branch_id, specialty_id. Roles: all.",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/doctors?branch_id=1&specialty_id=1",
+              "host": ["{{base_url}}"],
+              "path": ["doctors"],
+              "query": [
+                { "key": "branch_id",    "value": "1", "description": "Filter by branch ID" },
+                { "key": "specialty_id", "value": "1", "description": "Filter by specialty ID" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /doctors/{id}/available-slots",
+          "description": "List available time slots for a doctor at a branch on a given date. Roles: all.",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/doctors/1/available-slots?branch_id=1&date=2026-11-24",
+              "host": ["{{base_url}}"],
+              "path": ["doctors", "1", "available-slots"],
+              "query": [
+                { "key": "branch_id", "value": "1",          "description": "Required — branch ID" },
+                { "key": "date",      "value": "2026-11-24", "description": "Required — date in Y-m-d format" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "GET /appointments",
+          "description": "List appointments scoped to the authenticated user's role. Optional filters: status, date, branch_id (admin), doctor_id (admin/receptionist). Roles: all.",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/appointments?status=booked&date=2026-11-24",
+              "host": ["{{base_url}}"],
+              "path": ["appointments"],
+              "query": [
+                { "key": "status",    "value": "booked",      "description": "Filter by status" },
+                { "key": "date",      "value": "2026-11-24",  "description": "Filter by date Y-m-d" },
+                { "key": "branch_id", "value": "1",           "description": "Admin only" },
+                { "key": "doctor_id", "value": "1",           "description": "Admin and receptionist only" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /appointments",
+          "description": "Book a new appointment. Roles: admin, receptionist, patient.",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept",       "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doctor_id\": 1,\n  \"patient_id\": 1,\n  \"branch_id\": 1,\n  \"start_at\": \"2026-11-24 09:00:00\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/appointments", "host": ["{{base_url}}"], "path": ["appointments"] }
+          }
+        },
+        {
+          "name": "GET /appointments/{id}",
+          "description": "View a single appointment. Access scoped by role. Roles: all.",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/appointments/1",
+              "host": ["{{base_url}}"],
+              "path": ["appointments", "1"]
+            }
+          }
+        },
+        {
+          "name": "PATCH /appointments/{id}/cancel",
+          "description": "Cancel an appointment. Roles: admin, receptionist, patient (own only). Doctors cannot cancel.",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/appointments/1/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["appointments", "1", "cancel"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Medical Records",
+      "item": [
+        {
+          "name": "GET /appointments/{id}/medical-record",
+          "description": "View the medical record for an appointment. Access scoped by role. Roles: all.",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/appointments/1/medical-record",
+              "host": ["{{base_url}}"],
+              "path": ["appointments", "1", "medical-record"]
+            }
+          }
+        },
+        {
+          "name": "POST /appointments/{id}/medical-record",
+          "description": "Create a medical record for an appointment. One record per appointment. Roles: admin, doctor.",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept",       "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnosis\": \"Upper respiratory infection\",\n  \"notes\": \"Rest and fluids recommended.\",\n  \"prescription\": [\n    { \"name\": \"Amoxicillin\", \"dosage\": \"500mg\", \"duration\": \"7 days\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/appointments/1/medical-record",
+              "host": ["{{base_url}}"],
+              "path": ["appointments", "1", "medical-record"]
+            }
+          }
+        },
+        {
+          "name": "PATCH /appointments/{id}/medical-record",
+          "description": "Update an existing medical record. Roles: admin, doctor.",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept",       "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Follow up in one week.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/appointments/1/medical-record",
+              "host": ["{{base_url}}"],
+              "path": ["appointments", "1", "medical-record"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attachments",
+      "item": [
+        {
+          "name": "POST /medical-records/{id}/attachments",
+          "description": "Upload a file attachment to a medical record. Allowed: jpg, jpeg, png, pdf, doc, docx. Max: 10MB. Stored privately. Roles: admin, doctor.",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "description": "File to upload" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/medical-records/1/attachments",
+              "host": ["{{base_url}}"],
+              "path": ["medical-records", "1", "attachments"]
+            }
+          }
+        },
+        {
+          "name": "DELETE /medical-records/{id}/attachments/{attachmentId}",
+          "description": "Delete an attachment from a medical record. Roles: admin, doctor.",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/medical-records/1/attachments/1",
+              "host": ["{{base_url}}"],
+              "path": ["medical-records", "1", "attachments", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
