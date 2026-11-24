@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Branch extends Model
 {
@@ -27,5 +28,10 @@ class Branch extends Model
     public function appointmentSequences(): HasMany
     {
         return $this->hasMany(AppointmentSequence::class);
+    }
+
+    public function attachments(): MorphMany
+    {
+        return $this->morphMany(Attachment::class, 'attachable');
     }
 }

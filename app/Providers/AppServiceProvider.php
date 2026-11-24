@@ -11,6 +11,7 @@ use App\Observers\DoctorObserver;
 use App\Observers\DoctorScheduleObserver;
 use App\Observers\MedicalRecordObserver;
 use App\Policies\AppointmentPolicy;
+use App\Policies\MedicalRecordPolicy;
 use App\Sms\LogSmsProvider;
 use App\Sms\SmsProviderInterface;
 use Illuminate\Support\Facades\Gate;
@@ -31,5 +32,6 @@ class AppServiceProvider extends ServiceProvider
         DoctorSchedule::observe(DoctorScheduleObserver::class);
 
         Gate::policy(Appointment::class, AppointmentPolicy::class);
+        Gate::policy(MedicalRecord::class, MedicalRecordPolicy::class);
     }
 }
